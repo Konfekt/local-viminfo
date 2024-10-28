@@ -61,14 +61,14 @@ let s:last_session = ''
 
 augroup viminfo
   autocmd!
-  autocmd viminfo SessionLoadPost *
+  autocmd SessionLoadPost *
         \ if v:this_session !=# s:last_session |
         \   let s:last_session = v:this_session | call s:VimInfoSessionLoad() |
         \ endif
   if has('nvim')
-    autocmd viminfo SessionWritePost * wshada
+    autocmd SessionWritePost * wshada
   elseif v:version > 900 " && has('patch-9.1.207')
-    autocmd viminfo SessionWritePost * wviminfo
+    autocmd SessionWritePost * wviminfo
   endif
 augroup END
 
