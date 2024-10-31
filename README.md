@@ -1,11 +1,11 @@
-If you work on more than one (git) project, say those of (Neo)Vim and Linux, then you may wish to keep their file histories, bookmarks, command histories ... separate. 
+If you work on more than one (git) project, say those of (Neo)Vim and Linux, then you may wish to keep their file / command / search histories, bookmarks, ... separate. 
 <!-- Once this plugin is installed, that is, , you can enable a project/repo-local viminfo by `touch .viminfo` (respectively `touch .shada`): -->
 This can be achieved in Vim (respectively Neovim) with (repo-)local viminfo (respectively shada) files, by
 
-1. adding this plug-in (that is, `plugin/viminfo.vim` to your runtime path) and
-1. a `.viminfo` (respectively `.shada`) file in (the root folder of) your repository that, if empty, will be initially replaced by your current one.
+1. installing once and for all this plug-in (that is, put `plugin/viminfo.vim` into your `&runtime` path, say `~/.vim`) and
+1. adding a `.viminfo` (respectively `.shada`) file in (the root folder of) your repository that, if empty, will be initially replaced by your current one (so that `touch .viminfo` would branch off the repo-local history from your current global one).
 
-Now at the start of a (Neo)Vim session, if present, the viminfo file of the current work dir is loaded (and the usual, global, one otherwise).
+Now at the start of a (Neo)Vim session, if present, the viminfo file of the current work dir is loaded (and otherwise the usual, global, viminfo).
 
 To avoid cluttering git status, add a line reading
 
