@@ -1,6 +1,6 @@
 If you work on more than one (git) project, say those of (Neo)Vim and Linux, then you may wish to keep their file / command / search histories, bookmarks, ... separate. 
 <!-- Once this plugin is installed, that is, , you can enable a project/repo-local viminfo by `touch .viminfo` (respectively `touch .shada`): -->
-This can be achieved in Vim (respectively Neovim) with (repo-)local viminfo (respectively shada) files, by
+This can be achieved in Vim (respectively Neovim) with (repo-)local [viminfo](https://vimhelp.org/starting.txt.html#viminfo) (respectively shada) files, by
 
 1. installing once and for all this plug-in (that is, put `plugin/viminfo.vim` into your `&runtime` path, say `~/.vim`) and
 1. adding a `.viminfo` (respectively `.shada`) file in (the root folder of) your repository that, if empty, will be initially replaced by your current one (so that `touch .viminfo` would branch off the repo-local history from your current global one).
@@ -13,22 +13,7 @@ To avoid cluttering git status, add a line reading
 /.viminfo
 ```
 
-(respectively `.shada`) to `.git/info/exclude` (and maybe directly in the git template folder).
-
-# Default Shada
-
-In Neovim, according to `:help shada-file-name` the default path of the shada file is
-
-- Unix:     `"$XDG_STATE_HOME/nvim/shada/main.shada"`
-- Windows:  `"$XDG_STATE_HOME/nvim-data/shada/main.shada"`
-
-To use the same directory on both OS's, add the following line to your Vimrc:
-
-```vim
-if empty($XDG_STATE_HOME) | let $XDG_STATE_HOME = $HOME..'/.local/state' | endif
-if !isdirectory(expand($XDG_STATE_HOME)) | call mkdir(expand($XDG_STATE_HOME), 'p') | endif
-let &shada .= ',n'..$XDG_STATE_HOME..'/nvim/shada/main.shada'
-```
+(respectively `.shada`) to `.git/info/exclude` (and maybe directly in the [git template folder](https://git-template.readthedocs.io/en/latest/)).
 
 # Default Viminfo
 
@@ -45,6 +30,21 @@ vimrc:
 if empty($XDG_STATE_HOME) | let $XDG_STATE_HOME = $HOME..'/.local/state' | endif
 if !isdirectory(expand($XDG_STATE_HOME)) | call mkdir(expand($XDG_STATE_HOME), 'p') | endif
 let &viminfo .= ',n'..$XDG_STATE_HOME..'/vim/viminfo'
+```
+
+# Default Shada
+
+In Neovim, according to `:help shada-file-name` the default path of the shada file is
+
+- Unix:     `"$XDG_STATE_HOME/nvim/shada/main.shada"`
+- Windows:  `"$XDG_STATE_HOME/nvim-data/shada/main.shada"`
+
+To use the same directory on both OS's, add the following line to your Vimrc:
+
+```vim
+if empty($XDG_STATE_HOME) | let $XDG_STATE_HOME = $HOME..'/.local/state' | endif
+if !isdirectory(expand($XDG_STATE_HOME)) | call mkdir(expand($XDG_STATE_HOME), 'p') | endif
+let &shada .= ',n'..$XDG_STATE_HOME..'/nvim/shada/main.shada'
 ```
 
 # History
