@@ -85,6 +85,7 @@ function! s:VimInfoSessionLoad()
   if empty(s:local_viminfofile)
     return
   endif
+  let s:local_viminfofile = fnamemodify(s:local_viminfofile, ':p')
   if getfsize(s:local_viminfofile) == 0 && exists('*filecopy')
     call delete(s:local_viminfofile)
     call filecopy(s:global_viminfofile, s:local_viminfofile)
