@@ -41,14 +41,14 @@ endif
 
 if has('nvim')
   let s:global_viminfofile = matchstr(&shada, ',n\zs\f\+$')
-  if empty('s:global_viminfofile')
+  if empty(s:global_viminfofile)
     let s:global_viminfofile = stdpath("state")..'/nvim'..(has('win32') ? '-data' : '')..'/shada/main.shada'
     let &shada   .= (empty(&shada) ? '' : ',')..'n'..s:global_viminfofile
   endif
 else
   let s:global_viminfofile = matchstr(&viminfo, ',n\zs\f\+$')
-  if empty('s:global_viminfofile')
-    let s:global_viminfofile = $HOME .. has('win32') ? '/_viminfo' : '/.viminfo'
+  if empty(s:global_viminfofile)
+    let s:global_viminfofile = $HOME .. (has('win32') ? '/_viminfo' : '/.viminfo')
     let &viminfo .= (empty(&viminfo) ? '' : ',')..'n'..s:global_viminfofile
   endif
 endif
