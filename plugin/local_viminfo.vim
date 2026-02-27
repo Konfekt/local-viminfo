@@ -29,9 +29,7 @@
 " if !isdirectory(expand($XDG_STATE_HOME)) | call mkdir(expand($XDG_STATE_HOME), 'p') | endif
 " let &viminfo .= ',n'..$XDG_STATE_HOME..'/vim/viminfo'
 
-if &compatible || exists('g:loaded_viminfo')
-    finish
-endif
+if &compatible || exists('g:loaded_viminfo') | finish | endif
 
 " From https://www.reddit.com/r/vim/comments/povbkh/tip_viminfo_per_project/
 " Default to global viminfo if no local viminfo found.
@@ -39,25 +37,81 @@ endif
 " Respect &viminfofile if set explicitly, in particular by -i command-line
 " flag, by setting viminfo file path in &viminfo instead of &viminfofile.
 
-if has('nvim')
-  let s:global_viminfofile = matchstr(&shada, ',n\zs\f\+$')
+let s:is_nvim = has('nvim')
+
+" Compute default and effective global locations.
+if s:is_nvim
+  let s:default_global_viminfofile = stdpath('state') .. '/shada/main.shada'
+  let s:global_viminfofile = matchstr(&shada, '\%(^\|,\)n\zs[^,]*')
   if empty(s:global_viminfofile)
-    let s:global_viminfofile = stdpath("state")..'/nvim'..(has('win32') ? '-data' : '')..'/shada/main.shada'
-    let &shada   .= (empty(&shada) ? '' : ',')..'n'..s:global_viminfofile
+    let s:global_viminfofile = s:default_global_viminfofile
+    let &shada .= (empty(&shada) ? '' : ',') .. 'n' .. s:global_viminfofile
   endif
 else
-  let s:global_viminfofile = matchstr(&viminfo, ',n\zs\f\+$')
+  let s:default_global_viminfofile = expand('~') .. (has('win32') ? '/_viminfo' : '/.viminfo')
+  let s:global_viminfofile = matchstr(&viminfo, '\%(^\|,\)n\zs[^,]*')
   if empty(s:global_viminfofile)
-    let s:global_viminfofile = $HOME .. (has('win32') ? '/_viminfo' : '/.viminfo')
-    let &viminfo .= (empty(&viminfo) ? '' : ',')..'n'..s:global_viminfofile
+    let s:global_viminfofile = s:default_global_viminfofile
+    let &viminfo .= (empty(&viminfo) ? '' : ',') .. 'n' .. s:global_viminfofile
   endif
 endif
 
 " Make Sessions respect local viminfo.
-" Since view session files do not set v:this_session and keep the global
-" current working directory, we skip those for reloading viminfo.
 let v:this_session = ''
 let s:last_session = ''
+let s:local_viminfofile = ''
+
+function! s:SeedLocalFromGlobal(localfile) abort
+  if !filereadable(s:global_viminfofile) || getfsize(a:localfile) != 0
+    return
+  endif
+
+  " Copy global -> local when local file is empty.
+  if exists('*filecopy')
+    call delete(a:localfile)
+    call filecopy(s:global_viminfofile, a:localfile)
+  else
+    " Use libuv copy for Neovim (shada is binary).
+    if s:is_nvim
+      call luaeval('(vim.uv or vim.loop).fs_copyfile(_A[1], _A[2])', [s:global_viminfofile, a:localfile])
+    else
+      call writefile(readfile(s:global_viminfofile), a:localfile)
+    endif
+  endif
+endfunction
+
+function! s:VimInfoSessionLoad() abort
+  let l:marker = s:is_nvim ? '.shada' : '.viminfo'
+  let l:found = findfile(l:marker, getcwd() .. ';')
+  if empty(l:found)
+    return
+  endif
+
+  let l:found   = fnamemodify(l:found, ':p')
+  let l:global  = fnamemodify(s:global_viminfofile, ':p')
+  let l:default = fnamemodify(s:default_global_viminfofile, ':p')
+
+  " Skip accidental pickup of default ~/.viminfo when a non-default global location is configured.
+  if !s:is_nvim && l:found ==# l:default && l:global !=# l:default
+    return
+  endif
+
+  " Skip self.
+  if l:found ==# l:global | return | endif
+
+  call s:SeedLocalFromGlobal(l:found)
+
+  if l:found ==# s:local_viminfofile | return | endif
+  let s:local_viminfofile = l:found
+
+  if s:is_nvim
+    let &shada = substitute(&shada, '\%(^\|,\)n\zs.*$', escape(l:found, '\&'), '')
+    rshada
+  else
+    let &viminfo = substitute(&viminfo, '\%(^\|,\)n\zs.*$', escape(l:found, '\&'), '')
+    rviminfo
+  endif
+endfunction
 
 augroup viminfo
   autocmd!
@@ -66,7 +120,7 @@ augroup viminfo
         \   let s:last_session = v:this_session | call s:VimInfoSessionLoad() |
         \ endif
   if has('##SessionWritePost')
-    if has('nvim')
+    if s:is_nvim
       autocmd SessionWritePost * wshada
     else
       autocmd SessionWritePost * wviminfo
@@ -74,33 +128,6 @@ augroup viminfo
   endif
 augroup END
 
-let s:last_local_viminfofile = ''
-let s:local_viminfofile= ''
-function! s:VimInfoSessionLoad()
-  if has('nvim')
-    let s:local_viminfofile = findfile('.shada', getcwd(-1)..';')
-  else
-    let s:local_viminfofile = findfile('.viminfo', getcwd(-1)..';')
-  endif
-  if empty(s:local_viminfofile)
-    return
-  endif
-  let s:local_viminfofile = fnamemodify(s:local_viminfofile, ':p')
-  if getfsize(s:local_viminfofile) == 0 && exists('*filecopy')
-    call delete(s:local_viminfofile)
-    call filecopy(s:global_viminfofile, s:local_viminfofile)
-  endif
-  if s:local_viminfofile !=# s:last_local_viminfofile
-    let s:last_local_viminfofile = s:local_viminfofile
-    if has('nvim')
-      let &shada = substitute(&shada, '\%(^\|,\)n\zs.*$', escape(s:local_viminfofile, '\'), '')
-      rshada
-    else
-      let &viminfo = substitute(&viminfo, '\%(^\|,\)n\zs.*$', escape(s:local_viminfofile, '\'), '')
-      rviminfo
-    endif
-  endif
-endfunction
 call s:VimInfoSessionLoad()
 
 let g:loaded_viminfo = 1
