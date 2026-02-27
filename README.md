@@ -5,7 +5,7 @@ This can be achieved in Vim (respectively Neovim) with (repo-)local [viminfo](ht
 1. installing once and for all this plug-in (that is, put `plugin/viminfo.vim` into your `&runtime` path, say `~/.vim`) and
 1. adding a `.viminfo` (respectively `.shada`) file in (the root folder of) your repository that, if empty, will be initially replaced by your current one (so that `touch .viminfo` would branch off the repo-local history from your current global one).
 
-Now at the start of a (Neo)Vim session, if present, the viminfo file of the current work dir is loaded (and otherwise the usual, global, viminfo).
+Now at the start of a (Neo)Vim session, if present, the viminfo file of the current work dir is loaded and otherwise the usual, global, viminfo (with the exception of the local viminfo path, in the current work dir, coinciding with the *standard* global viminfo path, whereas a different global viminfo is configured).
 
 To avoid cluttering git status, add a line reading
 
